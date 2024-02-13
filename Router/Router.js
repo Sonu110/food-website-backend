@@ -2,6 +2,9 @@ const express = require("express");
 const Router = express.Router()
 const bcrypt = require('bcrypt');
 const User = require("../Models/user");
+const  jwt  = require("jsonwebtoken");
+const auth = require("../middleware/auth");
+const key = "sonu1234"
 
 Router.get('/',(req,res)=>{
 
@@ -11,6 +14,7 @@ Router.get('/',(req,res)=>{
 
 Router.post('/resgition', async (req, res) => {
     console.log("appio working");
+    
     const { name, email, password } = req.body;
     try {
       const hashedPassword = await bcrypt.hash(password, 8);
@@ -29,35 +33,53 @@ Router.post('/resgition', async (req, res) => {
 
 Router.post('/login', async (req, res) => {
   
-    const {email, password } = req.body;
- 
+    const {email, passwords } = req.body;
+
     try {
       const user = await User.findOne({ email });
-    
-      
+     
       if (!user) {
-        throw new Error('User not found');
+      return  res.json({ message :"user name is wrong" ,success : false})
+       
       }
-  
-      if (!user.password) {
-        throw new Error('User password not set'); // Handle the case where password is not set
-      }
-      const isPasswordMatch = await bcrypt.compare(password, user.password);
-
-      if (!isPasswordMatch) {
-        throw new Error('Invalid password');
-      }
-  
-      console.log('Password match:', isPasswordMatch);
       
+     
+      const isPasswordMatch = await bcrypt.compare(passwords, user.password);
+      
+      
+      if (!isPasswordMatch) {
+      return  res.json({ message :"passwrod is wrong" ,success : false})
+       
+      }
 
-      res.json({ data: "succesfully ", success: true });
+      const token = jwt.sign({_id: user._id.toString()} , key)
+  
+      user.tokens =token
+      await user.save()
+
+      if(user.isAdmin)
+      {
+        res.json({ data: user, token, isAdmin : user.isAdmin  ,  success: true });
+
+      }
+      else
+      {
+        res.json({ data: user, token, isAdmin : user.isAdmin  ,  success: true });
+      }
+
     } 
     catch (error) {
       console.error("Error during user creation:", error);
       res.status(402).json({ data: "Something went wrong", success: false });
     }
 });
+
+Router.get('/profile', auth, (req, res) => {
+  console.log("api working");
+  res.json({ data: req.user, success: true });
+});
+
+
 
 
 

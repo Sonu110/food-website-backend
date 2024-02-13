@@ -20,14 +20,14 @@ const user = new mongoose.Schema({
         required: true,
         default :"user"
         },
-        // tokens: [
-        //   {
-        //     token: {
-        //       type: String,
-        //       required: true,
-        //     },
-        //   },
-        // ],
+        tokens: [
+          {
+            type: String,
+            required: true,
+            default: "",
+          },
+        ]
+        ,
 
         isAdmin: {
           type: Boolean,
